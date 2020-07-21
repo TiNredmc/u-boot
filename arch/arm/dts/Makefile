@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0+
 
 # For Lichee Pi Nano
-dtb-$(CONFIG_MACH_SUNIV) += suniv-f1c100s-licheepi-nano.dtb" 
+dtb-$(CONFIG_MACH_SUNIV) += suniv-f1c100s-licheepi-nano.dtb 
 
 dtb-$(CONFIG_TARGET_SMARTWEB) += at91sam9260-smartweb.dtb
 dtb-$(CONFIG_TARGET_TAURUS) += at91sam9g20-taurus.dtb
