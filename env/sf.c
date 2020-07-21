@@ -33,6 +33,8 @@ static ulong env_new_offset	= CONFIG_ENV_OFFSET_REDUND;
 #define OBSOLETE_FLAG	0
 #endif /* CONFIG_ENV_OFFSET_REDUND */
 
+#define CONFIG_ENV_SECT_SIZE 0x1000
+
 DECLARE_GLOBAL_DATA_PTR;
 
 static struct spi_flash *env_flash;
