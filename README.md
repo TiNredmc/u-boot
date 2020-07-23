@@ -3,8 +3,8 @@
 Goal
 =
 1. Manually patch the bug (patch file done by thirtythreeforty, but I already done it for you <3)
-2. Add support for the Winbond W25N01G, the 128Mbyte ! SPI NAND Flash. Original work by hcly https://github.com/hcly/f1c100s
-3. I made the (by far) the best building instruction that will make you se absolutely 0 error
+2. Add support for the Winbond W25N01G, I took a portion of the code from u-boot main repo to driver/mtd/nand/spi/winbond.c
+3. Made the (by far) the best building instruction that will make you see absolutely 0 error
 
 Guide (For stock NOR flash)
 =
