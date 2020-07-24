@@ -139,7 +139,7 @@
 //#endif
 #ifndef CONFIG_SYS_NAND_BASE
 #define CONFIG_SYS_NAND_BASE 0x800000000
-#endid
+#endif
 
 #ifdef CONFIG_SPL_SPI_SUNXI
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	0x8000
