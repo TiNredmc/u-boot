@@ -154,14 +154,14 @@ void nand_init(void)
 		return;
 	initialized = 1;
 
-#ifdef CONFIG_SYS_NAND_SELF_INIT
+//#ifdef CONFIG_SYS_NAND_SELF_INIT
 	board_nand_init();
-#else
+/*#else
 	int i;
 
 	for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++)
 		nand_init_chip(i);
-#endif
+#endif*/
 
 #ifdef CONFIG_SYS_NAND_SELECT_DEVICE
 	/*
