@@ -34,4 +34,8 @@ Guide (For stock NOR flash)
 Guide (For NAND flash)
 =
 
-W.I.P
+0. install swig python-dev python3-dev libncurse5-dev zlib1g-dev
+
+1. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- licheepi_nano_spinand_defconfig
+
+2. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4
