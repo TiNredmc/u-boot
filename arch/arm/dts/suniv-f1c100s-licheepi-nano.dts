@@ -32,10 +32,10 @@
 	pinctrl-0 = <&spi0_pins_a>;
 	status = "okay";
 
-	flash@0 {
+	spi-nand@0 {
 		#address-cells = <1>;
 		#size-cells = <1>;
-		compatible = "winbond,w25q128", "jedec,spi-nor";
+		compatible = "spi-nand";
 		reg = <0>;
 		spi-max-frequency = <40000000>;
 	};
