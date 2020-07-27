@@ -42,3 +42,10 @@ CONFIG_SYS_NAND_OOBSIZE=0x40
 # Force not to use the LZO compression.
 CONFIG_LZO=n
 CONFIG_CMD_UBI=n
+
+# Force not to do any special hashing and CRC stuffs 
+CONFIG_FIT_ENABLE_SHA256_SUPPORT=n
+CONFIG_SHA256=n
+CONFIG_CMD_CRC32=n
+CONFIG_CMD_LOADB=n
+CONFIG_CMD_LOADS=n
