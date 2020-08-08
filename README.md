@@ -2,6 +2,7 @@
 
 Goal
 =
+0. Make it works !
 1. Manually patch the bug (patch file done by thirtythreeforty, but I already done it for you <3)
 2. Add support for the Winbond W25N01GV, I took a portion of the code from u-boot main repo to driver/mtd/nand/spi/winbond.c
 3. Made the (by far) the best building instruction that will make you see absolutely 0 error
