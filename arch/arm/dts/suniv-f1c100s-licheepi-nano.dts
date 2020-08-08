@@ -32,10 +32,10 @@
 	pinctrl-0 = <&spi0_pins_a>;
 	status = "okay";
 
-	spi-nand@0 {
+	NAND:W25N01GV@0 {
 		#address-cells = <1>;
 		#size-cells = <1>;
-		compatible = "spi-nand";
+		compatible = "spi-nand","allwinner,sun4i-a10-nand";
 		reg = <0>;
 		spi-max-frequency = <40000000>;
 	};
