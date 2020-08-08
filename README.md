@@ -7,6 +7,15 @@ Goal
 2. Add support for the Winbond W25N01GV, I took a portion of the code from u-boot main repo to driver/mtd/nand/spi/winbond.c
 3. Made the (by far) the best building instruction that will make you see absolutely 0 error
 
+Guide (For NAND flash)
+=
+
+0. install swig python-dev python3-dev libncurse5-dev zlib1g-dev
+
+1. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- licheepi_nano_spinand_defconfig
+
+2. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4
+
 Guide (For stock NOR flash)
 =
 0. install swig python-dev python3-dev libncurse5-dev zlib1g-dev
@@ -32,11 +41,3 @@ Guide (For stock NOR flash)
 
 7. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4
 
-Guide (For NAND flash)
-=
-
-0. install swig python-dev python3-dev libncurse5-dev zlib1g-dev
-
-1. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- licheepi_nano_spinand_defconfig
-
-2. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4
