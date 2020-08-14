@@ -138,11 +138,7 @@
 #define CONFIG_SYS_MAX_NAND_DEVICE 8
 //#endif
 #ifndef CONFIG_SYS_NAND_BASE
-#define CONFIG_SYS_NAND_BASE 0x800000000
-#endif
-
-#ifdef CONFIG_SPL_SPI_SUNXI
-#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x8000
+#define CONFIG_SYS_NAND_BASE 0x10C05000
 #endif
 
 /* mmc config */
