@@ -209,7 +209,7 @@ static void spi0_deinit(void)
 
 #define SPI_READ_MAX_SIZE 60 /* FIFO size, minus 4 bytes of the header */
 
-static void sunxi_spi0_transmit(u8 *send, u32 ssize, ,u8 *recv, u32 rsize,
+static void sunxi_spi0_transmit(u8 *send, u32 ssize, u8 *recv, u32 rsize,
 				 ulong spi_ctl_reg,
 				 ulong spi_ctl_xch_bitmask,
 				 ulong spi_fifo_reg,
