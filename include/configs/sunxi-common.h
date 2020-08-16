@@ -141,6 +141,10 @@
 #define CONFIG_SYS_NAND_BASE 0x10C05000
 #endif
 
+#ifdef CONFIG_SPL_SPI_SUNXI
+#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x8000
+#endif
+
 /* mmc config */
 #ifdef CONFIG_MMC
 #define CONFIG_MMC_SUNXI_SLOT		0
