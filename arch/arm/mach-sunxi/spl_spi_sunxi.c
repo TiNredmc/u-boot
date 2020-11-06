@@ -206,10 +206,9 @@ static void spi0_deinit(void)
 }
 
 /*****************************************************************************/
+#define SPI_READ_MAX_SIZE 56 //(60 - 4)
 
-#define SPI_READ_MAX_SIZE 60 /* FIFO size, minus 4 bytes of the header */
-
-static void sunxi_spi0_transmit(u8 *send, u32 ssize, u8 *recv, u32 rsize,
+static void sunxi_spi0_read_data(u8 *buf, u32 addr, u32 bufsize,
 				 ulong spi_ctl_reg,
 				 ulong spi_ctl_xch_bitmask,
 				 ulong spi_fifo_reg,
@@ -219,149 +218,56 @@ static void sunxi_spi0_transmit(u8 *send, u32 ssize, u8 *recv, u32 rsize,
 				 ulong spi_tc_reg,
 				 ulong spi_bcc_reg)
 {
-	writel(ssize + rsize, spi_bc_reg); /* Burst counter (total bytes) */
-	writel(ssize, spi_tc_reg);           /* Transfer counter (bytes to send) */
+	writel(4, spi_bc_reg); /* Burst counter (total bytes) */
+	writel(4, spi_tc_reg);           /* Transfer counter (bytes to send) */
 	if (spi_bcc_reg)
-		writel(ssize, spi_bcc_reg);  /* SUN6I also needs this */
+		writel(4, spi_bcc_reg);  /* SUN6I also needs this */
 
-	/* Send the Read Data Bytes (03h) command header */
-/*	writeb(0x03, spi_tx_reg);
-	writeb((u8)(addr >> 16), spi_tx_reg);
+	/* Data read request secquence */
+
+	writeb(0x13, spi_tx_reg);// Start reading from page number "addr" 
+	writeb(0, spi_tx_reg);
 	writeb((u8)(addr >> 8), spi_tx_reg);
-	writeb((u8)(addr), spi_tx_reg);*/
-	
-	for(u32 i=0; i < ssize;i++)
-		writeb(send[i], spi_tx_reg);
-	
+	writeb((u8)(addr), spi_tx_reg);
+
 	/* Start the data transfer */
 	setbits_le32(spi_ctl_reg, spi_ctl_xch_bitmask);
+	udelay(300);
 
 	/* Wait until everything is received in the RX FIFO */
-	while ((readl(spi_fifo_reg) & 0x7F) < ssize + rsize);
+	while ((readl(spi_fifo_reg) & 0x7F) < 8 + bufsize);
 
 	/* Skip 4 bytes */
-	//readl(spi_rx_reg);
-	for(u32 i = 0; i < ssize; i++)
-		readb(spi_rx_reg);
+	readl(spi_rx_reg);
+
+	writel(4 + bufsize, spi_bc_reg); /* Burst counter (total bytes) */
+	writel(4, spi_tc_reg);           /* Transfer counter (bytes to send) */
+	if (spi_bcc_reg)
+		writel(4, spi_bcc_reg);  /* SUN6I also needs this */
+
+	writeb(0x03, spi_tx_reg);// Issue 0x03 reading command, by reading data from the firt column (col0) of the buffer
+	writeb(0, spi_tx_reg);
+	writeb(0, spi_tx_reg);
+	writeb(0, spi_tx_reg);
+
+	/* Start the data transfer */
+	setbits_le32(spi_ctl_reg, spi_ctl_xch_bitmask);
+	udelay(10);
+
+	/* Wait until everything is received in the RX FIFO */
+	while ((readl(spi_fifo_reg) & 0x7F) < 8 + bufsize);
+
+	/* Skip 4 bytes */
+	readl(spi_rx_reg);
 
 	/* Read the data */
-	while (rsize-- > 0)
-		*recv++ = readb(spi_rx_reg);
+	while (bufsize-- > 0)
+		*buf++ = readb(spi_rx_reg);
 
 	/* tSHSL time is up to 100 ns in various SPI flash datasheets */
 	udelay(1);
 }
 
-static void spi0_transmit(
-				 void *send, u32 ssize,
-				 void *recv, u32 rsize)
-{
-	u8 *sbuf = send;
-	u8 *rbuf = recv;
-	uintptr_t base = 0x01C05000;
-	if (IS_ENABLED(CONFIG_SUNXI_GEN_SUN6I)) {
-		sunxi_spi0_transmit(
-					 sbuf, ssize,
-					 rbuf, rsize,
-					 base + SUN6I_SPI0_TCR,
-					 SUN6I_TCR_XCH,
-					 base + SUN6I_SPI0_FIFO_STA,
-					 base + SUN6I_SPI0_TXD,
-					 base + SUN6I_SPI0_RXD,
-					 base + SUN6I_SPI0_MBC,
-					 base + SUN6I_SPI0_MTC,
-					 base + SUN6I_SPI0_BCC);
-	} else {
-		sunxi_spi0_transmit(
-					 sbuf, ssize,
-					 rbuf, rsize,
-					 base + SUN4I_SPI0_CTL,
-					 SUN4I_CTL_XCH,
-					 base + SUN4I_SPI0_FIFO_STA,
-					 base + SUN4I_SPI0_TX,
-					 base + SUN4I_SPI0_RX,
-					 base + SUN4I_SPI0_BC,
-					 base + SUN4I_SPI0_TC,
-					 0);
-	}
-}
-
-enum flashtype
-{
-	FLASHTYPE_UNINIT,
-	FLASHTYPE_NOR,
-	FLASHTYPE_NAND,
-};
-
-static enum flashtype spi0_get_flash_type(void)
-{
-	static enum flashtype type;
-	static u8 chipid[2];
-	if(type == FLASHTYPE_UNINIT)
-	{
-		type = FLASHTYPE_NOR;
-		spi0_transmit("\x9f\x00", 2, chipid, 2); // Read Chip ID
-		if (!memcmp(chipid, "\xEF\xAA", 2)) {
-			printf("SPI-NAND: Winbond W25N01GV\n");
-			type = FLASHTYPE_NAND;
-		}
-	}
-	return type;
-}
-
-static u32 nandpage = -1;
-
-static u32 spi0_read_small_data(void *buf, u32 addr, u32 len)
-{
-	switch(spi0_get_flash_type())
-	{
-	case FLASHTYPE_NAND:
-	{
-		u32 page, wrap;
-		page = addr >> 11;
-		if (nandpage != page) {
-			u8 readcache[] = {0x13, (u8)(page >> 16), (u8)(page >> 8), (u8)(page)};
-			spi0_transmit(readcache, 4, NULL, 0);
-			udelay(300);
-			nandpage = page;
-		}
-		addr &= 0x7FF;
-		if (len + addr > 0x800) 
-			len = 0x800 - addr;
-		if (len > 0 && len <= 16) {
-            wrap = 12;
-        } else if(len > 16 && len <= 64) {
-            wrap = 8;
-        } else if(len > 65 && len <= 2048) {
-            wrap = 4;
-        } else {
-            wrap = 0;
-        }
-		switch(wrap)
-		{
-		case 12:
-			if((addr & 0xF) + len > 16) wrap = 8;
-			break;
-		case 8:
-			if((addr & 0x3F) + len > 65) wrap = 4;
-			break;
-		default:
-			wrap = 0;
-			break;
-		}
-		u8 read[] = {0x03, (u8)((addr >> 8) & 0xF) | (wrap << 4), addr & 0xFF, 0};
-		spi0_transmit(read, 4, buf, len);
-	}
-	break;
-	default:
-	{
-		u8 read[] = {0x03, (u8)(addr >> 16), (u8)(addr >> 8), (u8)(addr)};
-	spi0_transmit(read, 4, buf, len);
-	}
-	break;
-	}
-	return len;
-}
 
 static void spi0_read_data(void *buf, u32 addr, u32 len)
 {
@@ -418,7 +324,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 	u32 uboot_addr;
 	struct image_header *header;
 	header = (struct image_header *)(CONFIG_SYS_TEXT_BASE);
-	uboot_addr = CONFIG_SYS_SPI_U_BOOT_OFFS;
+
 
 	spi0_init();
 	
@@ -428,13 +334,10 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 	if (!is_boot0_magic(buffer + 4)) {
 		return -1;
 	}
-	if (spi0_get_flash_type() == FLASHTYPE_NAND) {
-		printf("SPI-NAND: U-Boot address: %u\n", CONFIG_SYS_SPI_U_BOOT_OFFS);
-		uboot_addr = CONFIG_SYS_SPI_U_BOOT_OFFS;
-	}
+
 #endif
 	
-	spi0_read_data((void *)header, uboot_addr, 0x40);
+	spi0_read_data((void *)header, CONFIG_SYS_SPI_U_BOOT_OFFS, 0x40);
 
         if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
 		image_get_magic(header) == FDT_MAGIC) {
