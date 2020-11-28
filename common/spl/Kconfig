@@ -920,6 +920,7 @@ config SPL_OPTEE
 	  OP-TEE is an open source Trusted OS  which is loaded by SPL.
 	  More detail at: https://github.com/OP-TEE/optee_os
 
+
 config TPL
 	bool
 	depends on SUPPORT_TPL

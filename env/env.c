@@ -196,6 +196,7 @@ int env_load(void)
 		 * one message.
 		 */
 		ret = drv->load();
+		printf("drv loaded!\n");
 		if (!ret) {
 			printf("OK\n");
 			return 0;

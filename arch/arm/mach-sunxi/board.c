@@ -283,11 +283,8 @@ void board_boot_order(u32 *spl_boot_list)
 	}
 
 	spl_boot_list[0] = BOOT_DEVICE_MMC1;
-#ifdef CONFIG_NAND_SUNXI
-	spl_boot_list[1] = BOOT_DEVICE_NAND; //Boot From NAND flash
-#else
-	spl_boot_list[1] = BOOT_DEVICE_SPI; //Boot From NOR flash
-#endif
+	spl_boot_list[1] = BOOT_DEVICE_SPI; //Boot From SPI flash
+
 }
 #endif
 

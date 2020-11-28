@@ -192,7 +192,7 @@ int do_nand_env_oob(cmd_tbl_t *cmdtp, int argc, char *const argv[])
 	char *cmd = argv[1];
 
 	if (CONFIG_SYS_MAX_NAND_DEVICE == 0 || !mtd) {
-		puts("no devices available\n");
+		printf("no devices available (mtd=%Xh)\n",mtd);
 		return 1;
 	}
 
@@ -412,7 +412,7 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		if (argc < 3) {
 			putc('\n');
 			if (dev < 0 || dev >= CONFIG_SYS_MAX_NAND_DEVICE)
-				puts("no devices available\n");
+				printf("no devices available (dev= %Xh)\n",dev);
 			else
 				nand_print_and_set_info(dev);
 			return 0;
@@ -438,7 +438,7 @@ static int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	 */
 	mtd = get_nand_dev_by_index(dev);
 	if (!mtd) {
-		puts("\nno devices available\n");
+		printf("no devices available (dev= %Xh)\n",dev);
 		return 1;
 	}
 

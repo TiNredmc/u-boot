@@ -8,6 +8,7 @@
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <linux/libfdt.h>
+#include <asm/arch/spl.h>
 
 #ifdef CONFIG_SPL_OS_BOOT
 #error CONFIG_SPL_OS_BOOT is not supported yet
@@ -124,7 +125,7 @@ static void spi0_enable_clock(void)
 	writel((1 << 31), CCM_SPI0_CLK);
 #else
 	/* Divide by 32, clock source is AHB clock 200MHz */
-	writel(SPI0_CLK_DIV_BY_32, IS_ENABLED(CONFIG_SUNXI_GEN_SUN6I) ?
+	writel(SPI0_CLK_DIV_BY_32, (IS_ENABLED(CONFIG_SUNXI_GEN_SUN6I) || IS_ENABLED(CONFIG_MACH_SUNIV)) ?
 				  SUN6I_SPI0_CCTL : SUN4I_SPI0_CCTL);
 #endif
 
@@ -205,8 +206,9 @@ static void spi0_deinit(void)
 }
 
 /*****************************************************************************/
+#define SPI_READ_MAX_SIZE 56 //(60 - 4)
 
-#define SPI_READ_MAX_SIZE 60 /* FIFO size, minus 4 bytes of the header */
+static u32 npage = -1;
 
 static void sunxi_spi0_read_data(u8 *buf, u32 addr, u32 bufsize,
 				 ulong spi_ctl_reg,
@@ -218,27 +220,82 @@ static void sunxi_spi0_read_data(u8 *buf, u32 addr, u32 bufsize,
 				 ulong spi_tc_reg,
 				 ulong spi_bcc_reg)
 {
+	u32 page, wrap;
+	
+	page = addr >> 11;
+	if( npage != page){
+
+	writel(4, spi_bc_reg); /* Burst counter (total bytes) */
+	writel(4, spi_tc_reg);           /* Transfer counter (bytes to send) */
+	if (spi_bcc_reg)
+		writel(4, spi_bcc_reg);  /* SUN6I also needs this */
+
+	/* Data read request secquence */
+	writeb(0x13, spi_tx_reg);// Start reading from page number "addr" 
+	writeb(0, spi_tx_reg);
+	writeb((u8)(page >> 8), spi_tx_reg);
+	writeb((u8)(page), spi_tx_reg);
+
+	/* Start the data transfer */
+	setbits_le32(spi_ctl_reg, spi_ctl_xch_bitmask);
+	udelay(300);
+
+	/* Wait until everything is received in the RX FIFO */
+	while ((readl(spi_fifo_reg) & 0x7F) < 4);
+
+	/* Skip 4 bytes */
+	readl(spi_rx_reg);
+	npage = page;
+	}
+
 	writel(4 + bufsize, spi_bc_reg); /* Burst counter (total bytes) */
 	writel(4, spi_tc_reg);           /* Transfer counter (bytes to send) */
 	if (spi_bcc_reg)
 		writel(4, spi_bcc_reg);  /* SUN6I also needs this */
 
-	/* Send the Read Data Bytes (03h) command header */
-	writeb(0x03, spi_tx_reg);
-	writeb((u8)(addr >> 16), spi_tx_reg);
-	writeb((u8)(addr >> 8), spi_tx_reg);
-	writeb((u8)(addr), spi_tx_reg);
+	addr &= 0x7FF;
+	if( bufsize + addr > 0x800 ) 
+		bufsize = 0x800 - addr;
+
+
+	if (bufsize > 0 && bufsize <= 16) {
+            wrap = 12;
+        } else if(bufsize > 16 && bufsize <= 64) {
+            wrap = 8;
+        } else if(bufsize > 65 && bufsize <= 2048) {
+            wrap = 4;
+        } else {
+            wrap = 0;
+        }
+		switch(wrap)
+		{
+		case 12:
+			if((addr & 0xF) + bufsize > 16) wrap = 8;
+			break;
+		case 8:
+			if((addr & 0x3F) + bufsize > 65) wrap = 4;
+			break;
+		default:
+			wrap = 0;
+			break;
+		}
+
+
+	writeb(0x03, spi_tx_reg);// Issue 0x03 reading command, by reading data from the firt column (col0) of the buffer
+	writeb((u8)((addr >> 8) & 0xF) | (wrap << 4), spi_tx_reg);
+	writeb((u8)(addr) & 0xFF, spi_tx_reg);
+	writeb(0, spi_tx_reg);
 
 	/* Start the data transfer */
 	setbits_le32(spi_ctl_reg, spi_ctl_xch_bitmask);
+	udelay(10);
 
 	/* Wait until everything is received in the RX FIFO */
-	while ((readl(spi_fifo_reg) & 0x7F) < 4 + bufsize)
-		;
+	while ((readl(spi_fifo_reg) & 0x7F) < 4 + bufsize);
 
 	/* Skip 4 bytes */
 	readl(spi_rx_reg);
-
+	
 	/* Read the data */
 	while (bufsize-- > 0)
 		*buf++ = readb(spi_rx_reg);
@@ -253,10 +310,8 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 	u32 chunk_len;
 
 	while (len > 0) {
-		chunk_len = len;
-		if (chunk_len > SPI_READ_MAX_SIZE)
-			chunk_len = SPI_READ_MAX_SIZE;
-
+			chunk_len = len;
+		if (chunk_len > SPI_READ_MAX_SIZE){chunk_len = SPI_READ_MAX_SIZE;}
 		if (IS_ENABLED(CONFIG_SUNXI_GEN_SUN6I)) {
 			sunxi_spi0_read_data(buf8, addr, chunk_len,
 					     SUN6I_SPI0_TCR,
@@ -271,19 +326,20 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 			sunxi_spi0_read_data(buf8, addr, chunk_len,
 					     SUN4I_SPI0_CTL,
 					     SUN4I_CTL_XCH,
-					     SUN4I_SPI0_FIFO_STA,
+				 	     SUN4I_SPI0_FIFO_STA,
 					     SUN4I_SPI0_TX,
 					     SUN4I_SPI0_RX,
 					     SUN4I_SPI0_BC,
 					     SUN4I_SPI0_TC,
 					     0);
 		}
-
+		
 		len  -= chunk_len;
 		buf8 += chunk_len;
 		addr += chunk_len;
 	}
 }
+
 
 static ulong spi_load_read(struct spl_load_info *load, ulong sector,
 			   ulong count, void *buf)
@@ -304,7 +360,19 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 
 	spi0_init();
 
+#ifdef CONFIG_MACH_SUNIV
+	unsigned char *buffer = (unsigned char *)(CONFIG_SYS_TEXT_BASE);
+	spi0_read_data(buffer, 0, 16);
+	if (!is_boot0_magic(buffer + 4)) {
+		printf("Woops, No BOOT0 magic found. Reading error?\n");
+		return -1;
+	}else{
+		printf("Boot 0 Magic found !\n");
+	}
+#endif
+	printf("header loading\n");
 	spi0_read_data((void *)header, CONFIG_SYS_SPI_U_BOOT_OFFS, 0x40);
+	printf("header loaded !\n");
 
         if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
 		image_get_magic(header) == FDT_MAGIC) {
@@ -322,14 +390,14 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 		ret = spl_parse_image_header(spl_image, header);
 		if (ret)
 			return ret;
-
+		printf("SPL Image size: %d SPL load address: %lx\n", spl_image->size, spl_image->load_addr);
 		spi0_read_data((void *)spl_image->load_addr,
 			       CONFIG_SYS_SPI_U_BOOT_OFFS, spl_image->size);
 	}
-
+	printf("DONE, Let's go !\n");
 	spi0_deinit();
 
 	return ret;
 }
 /* Use priorty 0 to override the default if it happens to be linked in */
-SPL_LOAD_IMAGE_METHOD("sunxi SPI", 0, BOOT_DEVICE_SPI, spl_spi_load_image);
+SPL_LOAD_IMAGE_METHOD("sunxi SPI", 1, BOOT_DEVICE_SPI, spl_spi_load_image);

@@ -12,4 +12,6 @@
  */
 #include <configs/sunxi-common.h>
 
+//#define CONFIG_BOOTCOMMAND "mtd list; mtd read.raw spi-nand0 0x80000000 0x0 0x62000"
+
 #endif /* __CONFIG_H */

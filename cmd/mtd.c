@@ -33,9 +33,9 @@ static struct mtd_info *get_mtd_by_name(const char *name)
 
 static uint mtd_len_to_pages(struct mtd_info *mtd, u64 len)
 {
-	do_div(len, mtd->writesize);
+	do_div(len, mtd->writesize);// instead of return the remainder, the "len" value is product of len / mtd_write_size (we ignore the fraction part 
 
-	return len;
+	return len;//return the product, which is the perfect page number
 }
 
 static bool mtd_is_aligned_with_min_io_size(struct mtd_info *mtd, u64 size)

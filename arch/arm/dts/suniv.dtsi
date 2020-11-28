@@ -84,7 +84,7 @@
 			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_BUS_SPI0>;
 			clock-names = "ahb", "mod";
 			resets = <&ccu RST_BUS_SPI0>;
-			status = "disabled";
+			status = "okay";
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};

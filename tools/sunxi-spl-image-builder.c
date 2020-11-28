@@ -342,7 +342,7 @@ static void display_help(int status)
 
 static int check_image_info(struct image_info *info)
 {
-	static int valid_ecc_strengths[] = { 16, 24, 28, 32, 40, 48, 56, 60, 64 };
+	static int valid_ecc_strengths[] = { 8, 16, 24, 28, 32, 40, 48, 56, 60, 64 };
 	int eccbytes, eccsteps;
 	unsigned i;
 
@@ -377,18 +377,22 @@ static int check_image_info(struct image_info *info)
 			info->ecc_strength);
 		return -EINVAL;
 	}
-
+	
+	if(info->ecc_strength < 16){
+	eccbytes = 1;
+	}else{
 	eccbytes = DIV_ROUND_UP(info->ecc_strength * 14, 8);
 	if (eccbytes % 2)
 		eccbytes++;
 	eccbytes += 4;
-
+	}
 	eccsteps = info->usable_page_size / info->ecc_step_size;
-
+		printf("eccsteps = %d,eccbytes = %d\n",eccsteps,eccbytes);
 	if (info->page_size + info->oob_size <
 	    info->usable_page_size + (eccsteps * eccbytes)) {
 		fprintf(stderr,
 			"ECC bytes do not fit in the NAND page, choose a weaker ECC\n");
+
 		return -EINVAL;
 	}
 
@@ -473,6 +477,8 @@ int main(int argc, char **argv)
 			info.usable_page_size = 8192;
 		else if (info.page_size > 4096)
 			info.usable_page_size = 4096;
+		else if (info.page_size > 2048)
+			info.usable_page_size = 2048;
 		else
 			info.usable_page_size = 1024;
 	}

@@ -90,7 +90,7 @@ static void nand_init_chip(int i)
 
 	if (board_nand_init(nand))
 		return;
-
+	//board_nand_init();
 	if (nand_scan(mtd, maxchips))
 		return;
 
@@ -154,14 +154,16 @@ void nand_init(void)
 		return;
 	initialized = 1;
 
-//#ifdef CONFIG_SYS_NAND_SELF_INIT
+#ifdef CONFIG_SYS_NAND_SELF_INIT
 	board_nand_init();
-/*#else
+	//dev_name[1] = {'w','2','5','N','0','1','G','V'};
+	//nand_register(1,mtd);
+#else
 	int i;
 
 	for (i = 0; i < CONFIG_SYS_MAX_NAND_DEVICE; i++)
 		nand_init_chip(i);
-#endif*/
+#endif
 
 #ifdef CONFIG_SYS_NAND_SELECT_DEVICE
 	/*
