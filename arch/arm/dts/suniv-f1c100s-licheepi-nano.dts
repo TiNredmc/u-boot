@@ -7,7 +7,7 @@
 #include "suniv-f1c100s.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
-
+#include <dt-bindings/pwm/pwm.h>
 / {
 	model = "Lichee Pi Nano";
 	compatible = "licheepi,licheepi-nano", "allwinner,suniv-f1c100s",
@@ -54,6 +54,13 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 	}
+
+	backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm 1 500000 0>;
+		brightness-levels = <0 4 8 16 32 64 128 255>;
+		default-brightness-level = <6>;
+	};
 };
 
 &uart0 {
@@ -70,10 +77,4 @@
 &usbphy {
 	usb0_id_det-gpio = <&pio 4 2 GPIO_ACTIVE_HIGH>; /* PE2 */
 	status = "okay";
-};
-
-&pwm {
-	pinctrl-names = "defult";
-	pinctrl-0 = <&pwm1_pin>
-	status = "okay"
 };

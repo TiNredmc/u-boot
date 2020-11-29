@@ -97,7 +97,7 @@
 			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_BUS_SPI1>;
 			clock-names = "ahb", "mod";
 			resets = <&ccu RST_BUS_SPI1>;
-			status = "disabled";
+			status = "okay";
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
@@ -276,7 +276,7 @@
 			#pwm-cells = <3>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&pwm1_pins>;
-			status = "disabled";
+			status = "okay";
 	   };
 	};
 };
