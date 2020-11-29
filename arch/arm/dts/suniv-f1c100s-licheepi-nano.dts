@@ -16,6 +16,7 @@
 	aliases {
 		serial0 = &uart0;
 		spi0 = &spi0;
+		spi1 = &spi1;
 	};
 
 	chosen {
@@ -37,36 +38,19 @@
 		#size-cells = <1>;
 		compatible = "spi-nand","allwinner,sun4i-a10-nand";
 		reg = <0>;
-		spi-max-frequency = <6000000>;
- 		partitions {
-            		compatible = "fixed-partitions";
-            		#address-cells = <1>;
-            		#size-cells = <1>;
-
-            		partition@0 {
-                		label = "u-boot";
-                		reg = <0x000000 0x100000>;
-                		read-only;
-            		};
-
-            		partition@100000 {
-                		label = "dtb";
-                		reg = <0x100000 0x10000>;
-                		read-only;
-            		};
-
-            		partition@110000 {
-                		label = "kernel";
-                		reg = <0x110000 0x400000>;
-                		read-only;
-           		 };
-
-            		partition@510000 {
-                		label = "rootfs";
-                		reg = <0x510000 0xAF0000>;
-            		};
         	};
 	};
+};
+
+&spi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi1_pins_a>;
+	status = "okay";
+		
+		panel : panel{
+				compatible = "sharp-memlcd";
+				#address-cells = <1>;
+				#size-cells = <0>;
 };
 
 &uart0 {
