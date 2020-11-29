@@ -84,7 +84,7 @@
 			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_BUS_SPI0>;
 			clock-names = "ahb", "mod";
 			resets = <&ccu RST_BUS_SPI0>;
-			status = "okay";
+			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
@@ -97,7 +97,7 @@
 			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_BUS_SPI1>;
 			clock-names = "ahb", "mod";
 			resets = <&ccu RST_BUS_SPI1>;
-			status = "okay";
+			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
@@ -128,7 +128,7 @@
 			gpio-controller;
 			interrupt-controller;
 			#interrupt-cells = <3>;
-			#gpio-cells = <4>;
+			#gpio-cells = <3>;
 
 			spi0_pins_a: spi0-pins-pc {
 				pins = "PC0", "PC1", "PC2", "PC3";
@@ -148,6 +148,11 @@
 			mmc0_pins: mmc0-pins {
 				pins = "PF0", "PF1", "PF2", "PF3", "PF4", "PF5";
 				function = "mmc0";
+			};
+
+			pwm1_pins: pwm1 {
+					pins = "PE6";
+					function = "pwm1";
 			};
 		};
 
@@ -263,5 +268,15 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
+
+      		pwm:pwm@1C21000 {
+		    compatible = "allwinner,sun7i-a20-pwm";        
+			reg = <0x1C21000 0xC>;
+			clocks = <&osc24M>;
+			#pwm-cells = <3>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pwm1_pins>;
+			status = "disabled";
+	   };
 	};
 };

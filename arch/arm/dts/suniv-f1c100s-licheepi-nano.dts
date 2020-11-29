@@ -32,6 +32,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi0_pins_a>;
 	status = "okay";
+	spi-max-frequency = <50000000>;
 
 	NAND:W25N01GV@0 {
 		#address-cells = <1>;
@@ -46,11 +47,13 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi1_pins_a>;
 	status = "okay";
-		
-		panel : panel{
-				compatible = "sharp-memlcd";
-				#address-cells = <1>;
-				#size-cells = <0>;
+	spi-max-frequency = <1000000>; //1MHz for Sharp memory LCD
+
+	panel : panel{
+		compatible = "sharp-memlcd";
+		#address-cells = <1>;
+		#size-cells = <0>;
+	}
 };
 
 &uart0 {
@@ -67,4 +70,10 @@
 &usbphy {
 	usb0_id_det-gpio = <&pio 4 2 GPIO_ACTIVE_HIGH>; /* PE2 */
 	status = "okay";
+};
+
+&pwm {
+	pinctrl-names = "defult";
+	pinctrl-0 = <&pwm1_pin>
+	status = "okay"
 };
