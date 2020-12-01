@@ -724,4 +724,9 @@ config IHS_VIDEO_OUT
 	  out On-screen Display (OSD) used on gdsys FPGAs to control dynamic
 	  textual overlays of the display outputs.
 
+config VIDEO_SHARP_MEMLCD
+	bool "Enable Sharp Memory LCD support "
+	help
+	  Sharp Memory LCD as console output 
+
 endmenu
