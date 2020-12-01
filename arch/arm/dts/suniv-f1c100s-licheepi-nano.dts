@@ -32,35 +32,44 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi0_pins_a>;
 	status = "okay";
-	spi-max-frequency = <50000000>;
 
 	NAND:W25N01GV@0 {
 		#address-cells = <1>;
 		#size-cells = <1>;
 		compatible = "spi-nand","allwinner,sun4i-a10-nand";
 		reg = <0>;
+		spi-max-frequency = <24000000>;
         	};
-	};
 };
 
 &spi1 {
-	pinctrl-names = "default";
+	pinctrl-names = "default1";
 	pinctrl-0 = <&spi1_pins_a>;
 	status = "okay";
-	spi-max-frequency = <1000000>; //1MHz for Sharp memory LCD
 
-	panel : panel{
+	panel:panel{
 		compatible = "sharp-memlcd";
 		#address-cells = <1>;
-		#size-cells = <0>;
-	}
+		#size-cells = <1>;
+		SCS-Pin = <&pio 4 11 0>; /* PE11 for SCS, Default state : LOW */
+		spi-max-frequency = <1500000>; //1MHz for Sharp memory LCD
 
-	backlight {
-		compatible = "pwm-backlight";
-		pwms = <&pwm 1 500000 0>;
-		brightness-levels = <0 4 8 16 32 64 128 255>;
-		default-brightness-level = <6>;
+		backlight {
+			compatible = "pwm-backlight";
+			pwms = <&pwm 1 500000 0>;
+			brightness-levels = <0 4 8 16 32 64 128 255>;
+			default-brightness-level = <6>;
+
+			reg_vcc3v3: vcc3v3 {
+				compatible = "regulator-fixed";
+				regulator-name = "vcc3v3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+		};
 	};
+
+
 };
 
 &uart0 {

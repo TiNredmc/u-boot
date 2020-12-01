@@ -97,7 +97,7 @@
 			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_BUS_SPI1>;
 			clock-names = "ahb", "mod";
 			resets = <&ccu RST_BUS_SPI1>;
-			status = "okay";
+			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
@@ -136,7 +136,7 @@
 			};
 
 			spi1_pins_a: spi1-pins-pa {
-				pins = "PA2", "PA0", "PA3", "PA2";
+				pins = "PA0", "PA1", "PA2", "PA3";
 				function = "spi1";
 			};
 
@@ -150,9 +150,9 @@
 				function = "mmc0";
 			};
 
-			pwm1_pins: pwm1 {
-					pins = "PE6";
-					function = "pwm1";
+			pwm0_pins: pwm0 {
+				pins = "PE12";
+				function = "pwm0";
 			};
 		};
 
@@ -275,8 +275,7 @@
 			clocks = <&osc24M>;
 			#pwm-cells = <3>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&pwm1_pins>;
-			status = "okay";
+			status = "disabled";
 	   };
 	};
 };
