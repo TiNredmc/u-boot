@@ -75,7 +75,7 @@
 #elif defined(CONFIG_MACH_SUNIV)
 #define SDRAM_OFFSET(x) 0x8##x
 #define CONFIG_SYS_SDRAM_BASE		0x80000000
-#define CONFIG_SYS_LOAD_ADDR		0x81000000 /* default load address */
+#define CONFIG_SYS_LOAD_ADDR		0x80000000 /* default load address 0x81000000*/
 /* Note SPL_STACK_R_ADDR is set through Kconfig, we include it here 
  * since it needs to fit in with the other values. By also #defining it
  * we get warnings if the Kconfig value mismatches. */
@@ -132,17 +132,14 @@
 #define CONFIG_INITRD_TAG
 #define CONFIG_SERIAL_TAG
 
-//#ifdef CONFIG_NAND_SUNXI
+#ifdef CONFIG_NAND_SUNXI
 #define CONFIG_SYS_NAND_MAX_ECCPOS 1664
 #define CONFIG_SYS_NAND_ONFI_DETECTION
-#define CONFIG_SYS_MAX_NAND_DEVICE 1
-//#endif
-//#define CONFIG_SYS_NAND_SELF_INIT
+#define CONFIG_SYS_MAX_NAND_DEVICE 8
 
-#ifndef CONFIG_SYS_NAND_BASE
-#define CONFIG_SYS_NAND_BASE 0x01C05000
+#define CONFIG_MTD_DEVICE
+#define CONFIG_MTD_PARTITIONS
 #endif
-
 
 #ifdef CONFIG_SPL_SPI_SUNXI
 #define CONFIG_SYS_SPI_U_BOOT_OFFS	0xd000
@@ -228,7 +225,7 @@
 
 #define CONFIG_SPL_STACK		LOW_LEVEL_SRAM_STACK
 
-#define CONFIG_SPL_PAD_TO		32768		/* decimal for 'dd' */
+#define CONFIG_SPL_PAD_TO		CONFIG_SYS_SPI_U_BOOT_OFFS		/* decimal for 'dd' */
 
 
 /* I2C */
