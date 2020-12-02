@@ -53,7 +53,7 @@
 		#size-cells = <1>;
 		SCS-Pin = <&pio 4 11 0>; /* PE11 for SCS, Default state : LOW */
 		spi-max-frequency = <1500000>; //1.5MHz for Sharp memory LCD
-		memlcd-pwm = <&pwm0 1 500000>;
+		memlcd-pwm = <&pwm0 0 500000>;
 	};
 
 
