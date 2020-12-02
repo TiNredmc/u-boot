@@ -37,9 +37,10 @@
 #define SUNXI_PWM_MUX			SUN8I_GPH_PWM
 #endif
 
-#if define CONFIG_MACH_SUNIV 
+#if defined CONFIG_MACH_SUNIV 
 #define SUNXI_PWM_PIN0			SUNIV_GPE(12)
 #define SUNXI_PWM_MUX			SUNIV_GPE_PWM0
+#endif
 
 struct sunxi_pwm {
 	u32 ctrl;

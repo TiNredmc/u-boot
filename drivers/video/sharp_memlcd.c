@@ -15,8 +15,8 @@
 #include <errno.h>
 #include <spi.h>
 #include <display.h>
+#include <pwm.h>
 #include <asm/io.h>
-#include <asm/arch/pwm.h>
 #include <asm/gpio.h>
 
 //LSB First
@@ -44,9 +44,12 @@
 
 struct memlcd_priv {
 	struct udevice *dev;
+	struct udevice *pwm;
 	struct spi_slave *spi;
 	struct gpio_desc scs; // scs pin for sharp display (Ignore hardware NSS)
 	u32 max_freq; // SPI Max frequency (must be 1-2Mhz for display to sample serial data
+	uint16_t pwm_period_ns;
+	uint32_t pwm_channel;
 };
 
 static uint8_t memlcd_msb2lsb(uint8_t* msb){
@@ -57,8 +60,23 @@ static uint8_t memlcd_msb2lsb(uint8_t* msb){
 	return *msb;
 }
 
-static void memlcd_pwm_on(void){
-	
+static void memlcd_pwm_on(struct udevice *dev){
+	struct memlcd_priv *priv = dev_get_priv(dev);
+	int ret;
+
+	ret = pwm_set_config(priv->pwm, priv->pwm_channel, priv->pwm_period_ns, 5);
+	if(ret) {
+		debug("%s: memlcd PWM set config failed: %d\n",__func__,ret);
+		return -1;
+	}
+
+	ret = pwm_set_enable(priv->pwm, priv->pwm_channel, true);
+	if(ret) {
+		debug("%s: memlcd PWM enable failed: %d\n",__func__,ret);
+		return -1;
+	}
+
+	return ret;
 }
 
 
@@ -105,10 +123,9 @@ static int memlcd_ofdata_to_platdata(struct udevie *dev){
 static int memlcd_enable(struct udevice *dev){
 	struct memlcd_priv *priv = dev_get_priv(dev);
 	int ret;
- 
-	/* FIXME */
-	// Backlight is PWM, in this case it's EXTCOMIN signal 
-	
+
+	// Backlight is PWM, in this case it's EXTCOMIN signal. Fixed at 20Hz
+	memlcd_pwm_on(dev);
 
 	// Display mem clear
   	memlcd_sendBlock(priv, (unsigned int *)MLCD_MC);
@@ -119,6 +136,7 @@ static int memlcd_enable(struct udevice *dev){
 
 static int memlcd_probe(struct udevice *dev){
 	struct memlcd_priv *priv = dev_get_priv(dev);
+	struct ofnode_phandle_args args;
 	priv->spi = dev_get_parent_priv(dev);
 	int ret;
 
@@ -137,6 +155,26 @@ static int memlcd_probe(struct udevice *dev){
 		return -1;
 	}
 	
+	//PWM0 setup
+	ret = dev_read_phandle_with_args(dev, "memlcd-pwm", "#pwm-cells", 0, 0, &args);	
+	if(ret) {
+		debug("%s: memlcd unable to obtain PWM phandle: %d\n",__func__,ret);
+		return -1;
+	}
+
+	ret = uclass_get_device_by_ofnode(UCLASS_PWM, args.node, &priv->pwm);
+	if(ret) {
+		debug("%s: memlcd unable to obtain PWM phandle: %d\n",__func__,ret);
+		return -1;
+	}
+
+	if (args.args_count < 2){
+		debug("Not enough arguments to pwm\n");
+		return -1;
+	}
+	priv->pwm_channel = args.args[0];
+	priv->pwm_period_ns = args.args[1];
+
 	return 0;
 
 }
