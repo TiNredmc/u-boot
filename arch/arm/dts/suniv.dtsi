@@ -269,12 +269,11 @@
 			#size-cells = <0>;
 		};
 
-      		pwm:pwm@1C21000 {
+      		pwm0: pwm@1C21000 {
 		    compatible = "allwinner,sun7i-a20-pwm";        
 			reg = <0x1C21000 0xC>;
 			clocks = <&osc24M>;
-			#pwm-cells = <3>;
-			pinctrl-names = "default";
+			#pwm-cells = <2>;
 			status = "disabled";
 	   };
 	};
