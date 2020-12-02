@@ -115,8 +115,27 @@ static int memlcd_ofdata_to_platdata(struct udevie *dev){
 	//SPI 
 	priv->max_freq = dev_read_u32_default(dev, "spi-max-frequency", &len);
 
-	return 0;
+	//PWM0 setup
+	ret = dev_read_phandle_with_args(dev, "memlcd-pwm", "#pwm-cells", 0, 0, &args);	
+	if(ret) {
+		debug("%s: memlcd unable to obtain PWM phandle: %d\n",__func__,ret);
+		return -1;
+	}
 
+	ret = uclass_get_device_by_ofnode(UCLASS_PWM, args.node, &priv->pwm);
+	if(ret) {
+		debug("%s: memlcd unable to obtain PWM phandle: %d\n",__func__,ret);
+		return -1;
+	}
+
+	if (args.args_count < 2){
+		debug("Not enough arguments to pwm\n");
+		return -1;
+	}
+	priv->pwm_channel = args.args[0];
+	priv->pwm_period_ns = args.args[1];
+
+	return 0;
 }
 
 
@@ -155,25 +174,6 @@ static int memlcd_probe(struct udevice *dev){
 		return -1;
 	}
 	
-	//PWM0 setup
-	ret = dev_read_phandle_with_args(dev, "memlcd-pwm", "#pwm-cells", 0, 0, &args);	
-	if(ret) {
-		debug("%s: memlcd unable to obtain PWM phandle: %d\n",__func__,ret);
-		return -1;
-	}
-
-	ret = uclass_get_device_by_ofnode(UCLASS_PWM, args.node, &priv->pwm);
-	if(ret) {
-		debug("%s: memlcd unable to obtain PWM phandle: %d\n",__func__,ret);
-		return -1;
-	}
-
-	if (args.args_count < 2){
-		debug("Not enough arguments to pwm\n");
-		return -1;
-	}
-	priv->pwm_channel = args.args[0];
-	priv->pwm_period_ns = args.args[1];
 
 	return 0;
 
