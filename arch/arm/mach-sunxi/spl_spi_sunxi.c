@@ -389,7 +389,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 		ret = spl_parse_image_header(spl_image, header);
 		if (ret)
 			return ret;
-		spi0_read_data((void *)header + 0x40,
+		spi0_read_data((void *)spl_image->header,
 			       CONFIG_SYS_SPI_U_BOOT_OFFS, spl_image->size);
 	}
 	printf("DONE, Let's go !\n");
