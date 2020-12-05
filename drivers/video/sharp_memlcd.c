@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Sharp Memory Display Driver for SUNXI
+ * Sharp Memory Display Driver.
  *
  * In this case I'm testing with LS027B7DH01
  * But it should work with others by changing 
@@ -24,13 +24,19 @@
 #define MLCD_MC 0x20 // Dislay internal mem clear
 #define MLCD_DM 0x00 // Dummy byte (sending after data update)
 
-#define MLCD_W
-#define MLCD_H
-#define MLCD_RSIZE  MLCD_W / 8
-#define MLCD_BUFSIZE  MLCD_RSIZE * MLCD_H
+#ifndef CONFIG_SHARP_MLCD_W
+#define CONFIG_SHARP_MLCD_W 240
+#endif
+
+#ifndef CONFIG_SHARP_MLCD_H
+#define CONFIG_SHARP_MLCD_H 400
+#endif
+
+#define MLCD_RSIZE CONFIG_SHARP_MLCD_W / 8
+#define MLCD_BUFSIZE MLCD_RSIZE * CONFIG_SHARP_MLCD_H
 
 #ifndef CONFIG_SHARP_LCD_BUS
-#define CONFIG_SHARP_LCD_BUS 2
+#define CONFIG_SHARP_LCD_BUS 1
 #endif
 
 #ifndef CONFIG_SHARP_LCD_CS
@@ -41,6 +47,7 @@
 //VCOM inverter control, Required for display refreshing
 #define EXTCOM_HI 0x40
 #define EXTCOM_LO 0x00
+
 
 struct memlcd_priv {
 	struct udevice *dev;
@@ -95,12 +102,14 @@ static int memlcd_sendBlock(struct memlcd_priv *priv, uint8_t* val[]){
 	return ret;
 }
 
+/* TODO */
 static int memlcd_read_timing(struct udevice *dev){
 	return 0;
 };
 
 static int memlcd_ofdata_to_platdata(struct udevie *dev){
 	struct memlcd_priv *priv = dev_get_priv(dev);
+	struct ofnode_phandle_args args;
 	int ret,len;
 
 	//GPIO for SCS pin
@@ -155,7 +164,6 @@ static int memlcd_enable(struct udevice *dev){
 
 static int memlcd_probe(struct udevice *dev){
 	struct memlcd_priv *priv = dev_get_priv(dev);
-	struct ofnode_phandle_args args;
 	priv->spi = dev_get_parent_priv(dev);
 	int ret;
 
@@ -179,13 +187,19 @@ static int memlcd_probe(struct udevice *dev){
 
 }
 
+
+/* TODO */
+static int memlcd_bind(struct udevice *dev){
+	return 0;
+}
+
 static const struct dm_display_ops sharp_memlcd_ops = {
 	.enable = memlcd_enable, 
 	.read_timing = memlcd_read_timing,
 };
 
 static const struct udevice_id sharp_memlcd_ids[] = {
-	{ .compatible = "sharp-memlcd" },
+	{ .compatible = "sharp,sharp-memlcd" },
 	{ }
 };
 
@@ -195,6 +209,7 @@ U_BOOT_DRIVER(sharp_memlcd) = {
 	.of_match = sharp_memlcd_ids,
 	.ops	= &sharp_memlcd_ops,
 	.probe	= memlcd_probe,
+	.bind	= memlcd_bind,
 	.ofdata_to_platdata = memlcd_ofdata_to_platdata,
 	.priv_auto_alloc_size = sizeof(struct memlcd_priv),
 };

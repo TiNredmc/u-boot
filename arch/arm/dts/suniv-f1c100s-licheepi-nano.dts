@@ -48,14 +48,13 @@
 	status = "okay";
 
 	display@0{
-		compatible = "sharp-memlcd";
-		#address-cells = <1>;
-		#size-cells = <1>;
+		#address-cells = <2>;
+		#size-cells = <5>;
+		compatible = "sharp,sharp-memlcd";
 		SCS-Pin = <&pio 4 11 0>; /* PE11 for SCS, Default state : LOW */
 		spi-max-frequency = <1500000>; //1.5MHz for Sharp memory LCD
 		memlcd-pwm = <&pwm0 0 500000>;
 	};
-
 
 };
 
