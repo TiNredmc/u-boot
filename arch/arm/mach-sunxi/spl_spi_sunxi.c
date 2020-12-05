@@ -232,7 +232,7 @@ static void sunxi_spi0_read_data(u8 *buf, u32 addr, u32 bufsize,
 
 	/* Data read request secquence */
 	writeb(0x13, spi_tx_reg);// Start reading from page number "addr" 
-	writeb(0, spi_tx_reg);
+	writeb((u8)(page >> 16), spi_tx_reg);
 	writeb((u8)(page >> 8), spi_tx_reg);
 	writeb((u8)(page), spi_tx_reg);
 
@@ -281,7 +281,7 @@ static void sunxi_spi0_read_data(u8 *buf, u32 addr, u32 bufsize,
 		}
 
 
-	writeb(0x03, spi_tx_reg);// Issue 0x03 reading command, by reading data from the firt column (col0) of the buffer
+	writeb(0x0B, spi_tx_reg);// Issue 0x03 reading command, by reading data from the firt column (col0) of the buffer
 	writeb((u8)((addr >> 8) & 0xF) | (wrap << 4), spi_tx_reg);
 	writeb((u8)(addr) & 0xFF, spi_tx_reg);
 	writeb(0, spi_tx_reg);
@@ -311,7 +311,8 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 
 	while (len > 0) {
 			chunk_len = len;
-		if (chunk_len > SPI_READ_MAX_SIZE){chunk_len = SPI_READ_MAX_SIZE;}
+		if (chunk_len > SPI_READ_MAX_SIZE)
+			chunk_len = SPI_READ_MAX_SIZE;
 		if (IS_ENABLED(CONFIG_SUNXI_GEN_SUN6I)) {
 			sunxi_spi0_read_data(buf8, addr, chunk_len,
 					     SUN6I_SPI0_TCR,
@@ -333,7 +334,7 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 					     SUN4I_SPI0_TC,
 					     0);
 		}
-		
+		printf("Len:%u\n",len);
 		len  -= chunk_len;
 		buf8 += chunk_len;
 		addr += chunk_len;
@@ -370,9 +371,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 		printf("Boot 0 Magic found !\n");
 	}
 #endif
-	printf("header loading\n");
 	spi0_read_data((void *)header, CONFIG_SYS_SPI_U_BOOT_OFFS, 0x40);
-	printf("header loaded !\n");
 
         if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
 		image_get_magic(header) == FDT_MAGIC) {
@@ -390,8 +389,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 		ret = spl_parse_image_header(spl_image, header);
 		if (ret)
 			return ret;
-		printf("SPL Image size: %d SPL load address: %lx\n", spl_image->size, spl_image->load_addr);
-		spi0_read_data((void *)spl_image->load_addr,
+		spi0_read_data((void *)header + 0x40,
 			       CONFIG_SYS_SPI_U_BOOT_OFFS, spl_image->size);
 	}
 	printf("DONE, Let's go !\n");
