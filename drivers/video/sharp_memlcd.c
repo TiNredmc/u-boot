@@ -20,9 +20,9 @@
 #include <asm/gpio.h>
 
 //LSB First
-#define MLCD_UD 0x80 // Display update command
-#define MLCD_MC 0x20 // Dislay internal mem clear
-#define MLCD_DM 0x00 // Dummy byte (sending after data update)
+#define MLCD_UD 0x8000 // Display update command
+#define MLCD_MC 0x2000 // Dislay internal mem clear
+#define MLCD_DM 0x0000 // Dummy byte (sending after data update)
 
 #ifndef CONFIG_SHARP_MLCD_W
 #define CONFIG_SHARP_MLCD_W 240
@@ -59,10 +59,10 @@ struct memlcd_priv {
 	uint32_t pwm_channel;
 };
 
-static uint8_t memlcd_msb2lsb(uint8_t* msb){
+static uint8_t memlcd_msb2lsb(uint8_t msb){
 	*msb = (*msb & 0xF0) >> 4 | (*msb & 0x0F) << 4 ;
-	*msb = (*msb & 0xCC) >> 4 | (*msb & 0x33) << 4 ;
-	*msb = (*msb & 0xAA) >> 4 | (*msb & 0x55) << 4 ;
+	*msb = (*msb & 0xCC) >> 2 | (*msb & 0x33) << 2 ;
+	*msb = (*msb & 0xAA) >> 1 | (*msb & 0x55) << 1 ;
 	
 	return *msb;
 }
@@ -87,10 +87,9 @@ static void memlcd_pwm_on(struct udevice *dev){
 }
 
 
-static int memlcd_sendBlock(struct memlcd_priv *priv, uint8_t* val[]){
+static int memlcd_sendBlock(struct memlcd_priv *priv, uint8_t* val[], uint8_t bitLen){
 	unsigned long flags = SPI_XFER_BEGIN;
 	int ret = 0;
-	uint8_t bitLen = sizeof(*val) * 8;
 
 	flags |= SPI_XFER_END;
 	dm_gpio_set_value(&priv->scs, 1);
@@ -156,7 +155,7 @@ static int memlcd_enable(struct udevice *dev){
 	memlcd_pwm_on(dev);
 
 	// Display mem clear
-  	memlcd_sendBlock(priv, (unsigned int *)MLCD_MC);
+  	memlcd_sendBlock(priv, (unsigned int *)MLCD_MC,4);
 
 	return 0;
  
