@@ -297,6 +297,7 @@ static void sunxi_spi0_read_data(u8 *buf, u32 addr, u32 bufsize,
 	readl(spi_rx_reg);
 	
 	/* Read the data */
+
 	while (bufsize-- > 0)
 		*buf++ = readb(spi_rx_reg);
 
@@ -313,7 +314,7 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 			chunk_len = len;
 		if (chunk_len > SPI_READ_MAX_SIZE)
 			chunk_len = SPI_READ_MAX_SIZE;
-		if (IS_ENABLED(CONFIG_SUNXI_GEN_SUN6I)) {
+#ifdef CONFIG_SUNXI_GEN_SUN6I
 			sunxi_spi0_read_data(buf8, addr, chunk_len,
 					     SUN6I_SPI0_TCR,
 					     SUN6I_TCR_XCH,
@@ -323,7 +324,7 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 					     SUN6I_SPI0_MBC,
 					     SUN6I_SPI0_MTC,
 					     SUN6I_SPI0_BCC);
-		} else {
+#else
 			sunxi_spi0_read_data(buf8, addr, chunk_len,
 					     SUN4I_SPI0_CTL,
 					     SUN4I_CTL_XCH,
@@ -333,8 +334,7 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 					     SUN4I_SPI0_BC,
 					     SUN4I_SPI0_TC,
 					     0);
-		}
-		printf("Len:%u\n",len);
+#endif
 		len  -= chunk_len;
 		buf8 += chunk_len;
 		addr += chunk_len;
