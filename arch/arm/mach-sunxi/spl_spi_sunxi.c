@@ -369,7 +369,7 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 		if (chunk_len > SPI_READ_MAX_SIZE)
 			chunk_len = SPI_READ_MAX_SIZE;
 
-			chunk_len = spi0_read_small_data(buf8, addr, chunk_len);
+		chunk_len = spi0_read_small_data(buf8, addr, chunk_len);
 
 		len  -= chunk_len;
 		buf8 += chunk_len;
@@ -395,10 +395,13 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 			      struct spl_boot_device *bootdev)
 {
 	int ret = 0;
+	u32 uboot_addr;
 	struct image_header *header;
 	header = (struct image_header *)(CONFIG_SYS_TEXT_BASE);
+	uboot_addr = CONFIG_SYS_SPI_U_BOOT_OFFS;
 
 	spi0_init();
+	printf("SPI initialized");
 
 #ifdef CONFIG_MACH_SUNIV
 	unsigned char *buffer = (unsigned char *)(CONFIG_SYS_TEXT_BASE);
@@ -409,6 +412,12 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 	}else{
 		printf("Boot 0 Magic found !\n");
 	}
+
+	if (spi0_get_flash_type() == FLASHTYPE_NAND) {
+		printf("SPI-NAND: U-Boot address: %u\n", CONFIG_SYS_SPI_U_BOOT_OFFS);
+		uboot_addr = CONFIG_SYS_SPI_U_BOOT_OFFS;
+	}
+
 #endif
 	spi0_read_data((void *)header, CONFIG_SYS_SPI_U_BOOT_OFFS, 0x40);
 
@@ -423,17 +432,17 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 		load.bl_len = 1;
 		load.read = spi_load_read;
 		ret = spl_load_simple_fit(spl_image, &load,
-					  CONFIG_SYS_SPI_U_BOOT_OFFS, header);
+					  uboot_addr, header);
 	} else {
 		ret = spl_parse_image_header(spl_image, header);
 		if (ret)
 			return ret;
 		spi0_read_data((void *)spl_image->load_addr,
-			       CONFIG_SYS_SPI_U_BOOT_OFFS, spl_image->size);
+			       uboot_addr, spl_image->size);
 	}
 	spi0_deinit();
 
 	return ret;
 }
 /* Use priorty 0 to override the default if it happens to be linked in */
-SPL_LOAD_IMAGE_METHOD("sunxi SPI", 1, BOOT_DEVICE_SPI, spl_spi_load_image);
+SPL_LOAD_IMAGE_METHOD("sunxi SPI", 0, BOOT_DEVICE_SPI, spl_spi_load_image);
