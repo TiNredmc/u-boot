@@ -328,7 +328,7 @@ static u32 spi0_read_small_data(void *buf, u32 addr, u32 len)
 			wrap = 0;
 			break;
 		}
-		u8 read[] = {0x03, (u8)((addr >> 8) & 0xF) | (wrap << 4), addr & 0xFF, 0};
+		u8 read[] = {0x0B, (u8)((addr >> 8) & 0xF) | (wrap << 4), addr & 0xFF, 0};
 		spi0_transmit(read, 4, buf, len);
 	}
 	break;
