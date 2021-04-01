@@ -232,6 +232,7 @@ static void sunxi_spi0_transmit(u8 *send, u32 ssize,
 
 	while ((readl(spi_fifo_reg) & 0x7F) < ssize + rsize);
 
+
 	for(u32 i = 0; i < ssize; i++)
 		readb(spi_rx_reg);
 
@@ -247,31 +248,17 @@ static void spi0_transmit( void *send, u32 ssize, void *recv, u32 rsize)
 	u8 *sbuf = send;
 	u8 *rbuf = recv;
 	uintptr_t base = 0x01C05000;
-#ifdef CONFIG_SUNXI_GEN_SUN6I
-		sunxi_spi0_transmit(
+	sunxi_spi0_transmit(
 					 sbuf, ssize,
 					 rbuf, rsize,
-					 base + SUN6I_SPI0_TCR,
+					 SUN6I_SPI0_TCR,
 					 SUN6I_TCR_XCH,
-					 base + SUN6I_SPI0_FIFO_STA,
-					 base + SUN6I_SPI0_TXD,
-					 base + SUN6I_SPI0_RXD,
-					 base + SUN6I_SPI0_MBC,
-					 base + SUN6I_SPI0_MTC,
-					 base + SUN6I_SPI0_BCC);
-#else
-		sunxi_spi0_transmit(
-					 sbuf, ssize,
-					 rbuf, rsize,
-					 base + SUN4I_SPI0_CTL,
-					 SUN4I_CTL_XCH,
-					 base + SUN4I_SPI0_FIFO_STA,
-					 base + SUN4I_SPI0_TX,
-					 base + SUN4I_SPI0_RX,
-					 base + SUN4I_SPI0_BC,
-					 base + SUN4I_SPI0_TC,
-					 0);
-#endif
+					 SUN6I_SPI0_FIFO_STA,
+					 SUN6I_SPI0_TXD,
+					 SUN6I_SPI0_RXD,
+					 SUN6I_SPI0_MBC,
+					 SUN6I_SPI0_MTC,
+					 SUN6I_SPI0_BCC);
 }
 
 enum flashtype
@@ -285,19 +272,19 @@ static enum flashtype spi0_get_flash_type(void)
 {
 	static enum flashtype type;
 	static u8 chipid[2];
-	if(type == FLASHTYPE_UNINIT)
-	{
-		type = FLASHTYPE_NOR;
+	if(type == FLASHTYPE_NAND)
+		return type;
+
+	type = FLASHTYPE_NOR;
 		spi0_transmit("\x9f\x00", 2, chipid, 2); // Read Chip ID
-		if (!memcmp(chipid, "\xc8\xf1\x00", 2)) {
+		if (!memcmp(chipid, "\xc8\xf1", 2)) {
 			printf("SPI-NAND: GigaDevice GD5F1GQ4UAxxG\n");
 			type = FLASHTYPE_NAND;
-		}
-		if (!memcmp(chipid, "\xef\xaa", 2)) {
+		}else if (!memcmp(chipid, "\xef\xaa", 2)) {
 			printf("SPI-NAND: Winbond W25N0xGV\n");
 			type = FLASHTYPE_NAND;
 		}
-	}
+
 	return type;
 }
 
@@ -370,7 +357,6 @@ static void spi0_read_data(void *buf, u32 addr, u32 len)
 			chunk_len = SPI_READ_MAX_SIZE;
 
 		chunk_len = spi0_read_small_data(buf8, addr, chunk_len);
-
 		len  -= chunk_len;
 		buf8 += chunk_len;
 		addr += chunk_len;
@@ -398,10 +384,10 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 	u32 uboot_addr;
 	struct image_header *header;
 	header = (struct image_header *)(CONFIG_SYS_TEXT_BASE);
-	uboot_addr = CONFIG_SYS_SPI_U_BOOT_OFFS;
+	uboot_addr = 0x8000;// in case of NOR flash
 
 	spi0_init();
-	printf("SPI initialized");
+	printf("SPI initialized\n");
 
 #ifdef CONFIG_MACH_SUNIV
 	unsigned char *buffer = (unsigned char *)(CONFIG_SYS_TEXT_BASE);
@@ -419,7 +405,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 	}
 
 #endif
-	spi0_read_data((void *)header, CONFIG_SYS_SPI_U_BOOT_OFFS, 0x40);
+	spi0_read_data((void *)header, uboot_addr, 0x40);
 
         if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
 		image_get_magic(header) == FDT_MAGIC) {
@@ -441,7 +427,7 @@ static int spl_spi_load_image(struct spl_image_info *spl_image,
 			       uboot_addr, spl_image->size);
 	}
 	spi0_deinit();
-
+	printf("Done\n");
 	return ret;
 }
 /* Use priorty 0 to override the default if it happens to be linked in */
