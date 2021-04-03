@@ -39,6 +39,7 @@ CONFIG_MTD=y
 CONFIG_DM_MTD=y
 CONFIG_MTD_SPI_NAND=y
 CONFIG_CMD_MTD=y
+CONFIG_CMD_MTDPARTS=y
 
 
 # Force not to use the LZO compression.
