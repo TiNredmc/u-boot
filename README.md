@@ -14,3 +14,10 @@ Guide (For NAND flash)
 1. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- licheepi_nano_spinand_defconfig
 
 2. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4
+
+Useful info
+=
+
+1. There's a file named "README_img_addr.txt" this txt file contain U-boot, DTB, Kernel and root file system memory address / NAND offset / and the image size (plus some extra space in order to align with 128K block erase)
+
+2. the f1c100s_uboot_spinand.sh from aodzip is the script that will convert the fresh-compiled u-boot into the actual bootable image.
