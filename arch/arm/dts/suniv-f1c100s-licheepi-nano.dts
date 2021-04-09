@@ -23,6 +23,13 @@
 		stdout-path = "serial0:115200n8";
 		bootargs = "console=ttyS0,115200 panic=5 earlyprintk mtdids:spi-nand0=nand0.0 mtdparts:mtdparts=nand0.0:512k(uboot)ro,128k(dtb)ro,4096K(kernel)ro,-@0x4A0000(rootfs) rootwait root=31:03 rw rootfstype=jffs2";
 	};
+
+	reg_vcc3v3: vcc3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
 };
 
 &otg_sram {
@@ -62,6 +69,13 @@
 &uart0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart0_pe_pins>;
+	status = "okay";
+};
+
+&mmc0 {
+	vmmc-supply = <&reg_vcc3v3>;
+	bus-width = <4>;
+	broken-cd;
 	status = "okay";
 };
 
