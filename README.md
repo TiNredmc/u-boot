@@ -9,7 +9,7 @@ Goal
 Guide (For NAND flash)
 =
 
-0. install swig python-dev python3-dev libncurse5-dev zlib1g-dev
+0. install swig python-dev python3-dev libncurses5-dev zlib1g-dev
 
 1. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- licheepi_nano_spinand_defconfig
 
